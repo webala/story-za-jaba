@@ -84,7 +84,7 @@ export default function ResultsScreen() {
           <div className="results-main">
             <div className="results-card">
               <div className="card-header">
-                <h2 className="card-title">Game Results</h2>
+                <h2 className="card-title">{result === 'jaba' ? 'Jaba' : 'Si Jaba'}</h2>
                 <p className="card-subtitle">
                   <span className="storyteller-name">{storytellerName}</span> told a <strong>{result === 'jaba' ? 'Fiction' : 'True'}</strong> story
                 </p>
@@ -94,30 +94,7 @@ export default function ResultsScreen() {
               
 
               {/* Voting Results */}
-              <div className="voting-breakdown">
-                <h3>Chat Voting Results</h3>
-                <div className="fact-fiction-results">
-                  <div className={`result-card fiction-result ${winningChoice === 'jaba' ? 'winner' : ''}`}>
-                    <div className="result-icon">🎭</div>
-                    <div className="result-title">JABA</div>
-                    <div className="result-subtitle">Fiction</div>
-                    <div className="vote-count-large">{votingResults.jaba}</div>
-                    <div className="vote-percentage">{totalVotes > 0 ? Math.round((votingResults.jaba / totalVotes) * 100) : 0}%</div>
-                  </div>
-                  
-                  <div className={`result-card fact-result ${winningChoice === 'siJaba' ? 'winner' : ''}`}>
-                    <div className="result-icon">✅</div>
-                    <div className="result-title">SI JABA</div>
-                    <div className="result-subtitle">Fact</div>
-                    <div className="vote-count-large">{votingResults.siJaba}</div>
-                    <div className="vote-percentage">{totalVotes > 0 ? Math.round((votingResults.siJaba / totalVotes) * 100) : 0}%</div>
-                  </div>
-                </div>
-                
-                <div className="total-votes">
-                  Total Chat Votes: <strong>{totalVotes}</strong>
-                </div>
-              </div>
+              
 
               {/* Game Stats */}
               <div className="game-stats">
@@ -132,14 +109,6 @@ export default function ResultsScreen() {
                   <div className="stat-icon">{result === 'jaba' ? '🎭' : '✅'}</div>
                   <div className="stat-content">
                     <div className="stat-number">{result === 'jaba' ? 'Fiction' : 'Fact'}</div>
-                    <div className="stat-label">Actual Story</div>
-                  </div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-icon">🗳️</div>
-                  <div className="stat-content">
-                    <div className="stat-number">{totalVotes}</div>
-                    <div className="stat-label">Total Votes</div>
                   </div>
                 </div>
               </div>

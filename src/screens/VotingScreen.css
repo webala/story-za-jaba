@@ -182,7 +182,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   max-width: 600px;
-  margin: 0 auto 30px;
+  margin: 0 0 30px;
 }
 
 .vote-option-card {
@@ -340,7 +340,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .voting-card {
-    margin: 0 15px;
+    /* margin: 0 15px; */
     padding: 20px;
   }
 
@@ -358,7 +358,7 @@
   }
 
   .fact-fiction-options {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1FR;
     gap: 16px;
   }
 

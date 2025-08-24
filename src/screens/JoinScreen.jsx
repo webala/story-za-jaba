@@ -5,7 +5,7 @@ import './JoinScreen.css'
 
 export default function JoinScreen() {
   const {  isLeader, playerId, playerNames, maxPlayers } = useBeemiSDK()
-  const { gamePlayerCount, joinGame } = useGame()
+  const {  joinGame } = useGame()
   const [isJoining, setIsJoining] = useState(false)
   const [playerName, setPlayerName] = useState('')
 
@@ -84,15 +84,15 @@ export default function JoinScreen() {
               <div className="step-icon">🗳️</div>
               <div className="step-content">
                 <h3>Vote</h3>
-                <p>Comment "jaba" or "si jaba" to vote</p>
+                <p>Viewers comment "jaba" or "si jaba" to vote</p>
               </div>
             </div>
             
             <div className="step">
               <div className="step-icon">🏆</div>
               <div className="step-content">
-                <h3>Discover</h3>
-                <p>Find out what's really true!</p>
+                <h3>Maintain engagement</h3>
+                <p>Viewers earn points for correct votes!</p>
               </div>
             </div>
           </div>

@@ -3,7 +3,11 @@ import { useBeemiSDK } from './BeemiSDKProvider'
 
 const GameContext = createContext()
 export const MIN_PLAYERS = 2
-export const MAX_PLAYERS = 3 
+export const MAX_PLAYERS = 3
+
+// Points system constants
+export const CORRECT_VOTE_POINTS = 30
+export const PLAYER_VOTE_WEIGHT = 5 
 
 export const useGame = () => {
   const context = useContext(GameContext)
@@ -361,17 +365,18 @@ export default function GameProvider({ children }) {
 
   // Handle leaderboard updates
   const handleLeaderboardUpdate = useCallback((leaderboardData) => {
-    console.log('🏆 Leaderboard CRDT update received:', leaderboardData)
+    console.log('🏆 [CRDT] Leaderboard CRDT update received:', leaderboardData)
+    console.log('🏆 [CRDT] Current device isLeader:', isLeader)
     if (leaderboardData) {
       // Convert plain object back to Map
       const leaderboardMap = new Map(Object.entries(leaderboardData))
-      console.log('🏆 Setting local leaderboard to:', leaderboardMap)
+      console.log('🏆 [CRDT] Setting local leaderboard to:', leaderboardMap)
       setViewerLeaderboard(leaderboardMap)
     } else {
-      console.log('🏆 Clearing leaderboard')
+      console.log('🏆 [CRDT] Clearing leaderboard')
       setViewerLeaderboard(new Map())
     }
-  }, [])
+  }, [isLeader])
 
   // Handle current round votes updates
   const handleCurrentRoundVotesUpdate = useCallback((votesData) => {
@@ -612,12 +617,17 @@ export default function GameProvider({ children }) {
 
   // Calculate leaderboard scores after voting ends
   const calculateLeaderboardScores = useCallback(() => {
+    if (!isLeader) {
+      console.log('❌ Only leader can calculate scores')
+      return
+    }
+    
     if (!result) {
       console.log('❌ Cannot calculate scores: no result set')
       return
     }
 
-    console.log('🏆 Calculating leaderboard scores...')
+    console.log('🏆 [LEADER] Calculating leaderboard scores...')
     console.log('📊 Correct answer was:', result)
     console.log('📊 Current round votes:', currentRoundVotes)
 
@@ -629,7 +639,7 @@ export default function GameProvider({ children }) {
         const wasCorrect = voteData.choice === result
         
         if (wasCorrect) {
-          console.log(`✅ ${username} voted correctly (${voteData.choice}), adding 10 points`)
+          console.log(`✅ [LEADER] ${username} voted correctly (${voteData.choice}), adding ${CORRECT_VOTE_POINTS} points`)
           
           // Get existing player data or create new entry
           const existingData = newLeaderboard.get(username) || {
@@ -641,9 +651,9 @@ export default function GameProvider({ children }) {
             totalVotes: 0
           }
           
-          console.log(`📊 ${username} previous points: ${existingData.points}`)
-          const newPoints = existingData.points + 10
-          console.log(`📊 ${username} new points: ${newPoints}`)
+          console.log(`📊 [LEADER] ${username} previous points: ${existingData.points}`)
+          const newPoints = existingData.points + CORRECT_VOTE_POINTS
+          console.log(`📊 [LEADER] ${username} new points: ${newPoints} (added ${CORRECT_VOTE_POINTS})`)
           
           // Update points and stats
           newLeaderboard.set(username, {
@@ -683,18 +693,23 @@ export default function GameProvider({ children }) {
     // Clear current round votes for next round
     setCurrentRoundVotes(new Map())
     setCRDT('current-round-votes', {})
-  }, [result, currentRoundVotes, setCRDT])
+  }, [isLeader, result, currentRoundVotes, setCRDT])
 
   // End voting and go to results
   const endVoting = useCallback(() => {
-    console.log('📊 Ending voting, moving to results...')
+    if (!isLeader) {
+      console.log('❌ Only leader can end voting')
+      return
+    }
+    
+    console.log('📊 [LEADER] Ending voting, moving to results...')
     
     // Calculate scores before moving to results
     calculateLeaderboardScores()
     
     setCRDT('game-phase', 'results')
     setCRDT('voting-end-time', null) // Clear the timer
-  }, [setCRDT, calculateLeaderboardScores])
+  }, [isLeader, setCRDT, calculateLeaderboardScores])
 
   // Advance to next storyteller
   const nextStoryteller = useCallback(() => {
@@ -789,8 +804,8 @@ export default function GameProvider({ children }) {
     
     // Calculate vote counts
     const voteCounts = {}
-    voteCounts[targetId] = 5 // Player vote worth 5
-    console.log(`🗳️ [VOTE] Base player vote: 5 points`)
+    voteCounts[targetId] = PLAYER_VOTE_WEIGHT // Player vote worth 5
+    console.log(`🗳️ [VOTE] Base player vote: ${PLAYER_VOTE_WEIGHT} points`)
     
     // Add audience votes
     let audienceTotal = 0
@@ -805,7 +820,7 @@ export default function GameProvider({ children }) {
       }
     })
     
-    console.log(`🗳️ [VOTE] Total for ${targetId}: ${voteCounts[targetId]} (5 player + ${audienceTotal} audience)`)
+    console.log(`🗳️ [VOTE] Total for ${targetId}: ${voteCounts[targetId]} (${PLAYER_VOTE_WEIGHT} player + ${audienceTotal} audience)`)
     setCRDT(`player-votes-${playerId}`, voteCounts)
   }, [playerId, deadPlayers, audienceVotes, setCRDT])
 

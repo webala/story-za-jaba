@@ -5,7 +5,6 @@
   padding: 20px;
   margin-top: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  border: 1px solid red;
 }
 
 .persistent-leaderboard h3 {
@@ -160,7 +159,6 @@
   
   .persistent-leaderboard {
     padding: 5px;
-    border: 1px solid red;
   }
   
   .persistent-leaderboard h3 {
