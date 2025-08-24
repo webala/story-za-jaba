@@ -1,0 +1,235 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Truth or Tales Color Scheme */
+  --primary-bg: #1a1f2e;
+  --secondary-bg: #252b3d;
+  --card-bg: #2a3441;
+  --accent-green: #4ade80;
+  --accent-green-hover: #3bc670;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --border-color: #374151;
+  --success-green: #10b981;
+  --warning-yellow: #f59e0b;
+  --error-red: #ef4444;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #1a1f2e 0%, #252b3d 100%);
+  --gradient-card: linear-gradient(135deg, #2a3441 0%, #374151 100%);
+  --gradient-green: linear-gradient(135deg, #4ade80 0%, #3bc670 100%);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.app {
+  min-height: 100vh;
+  background: var(--gradient-primary);
+}
+
+/* Global Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+/* Global Button Styles */
+.btn-primary {
+  background: var(--gradient-green);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(74, 222, 128, 0.3);
+}
+
+.btn-secondary {
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-green);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(74, 222, 128, 0.2);
+}
+
+.btn-disabled {
+  background: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Global Card Styles */
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.card-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Global Layout */
+.screen-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.screen-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.screen-title {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--accent-green);
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.screen-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.screen-heading {
+  font-size: 2rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.screen-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Persistent Leaderboard Styles */
+.persistent-leaderboard {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  margin-top: 40px;
+}
+
+.persistent-leaderboard h3 {
+  color: var(--accent-green);
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .screen-container {
+    padding: 15px;
+  }
+  
+  .screen-title {
+    font-size: 2.5rem;
+  }
+  
+  .screen-heading {
+    font-size: 1.5rem;
+  }
+  
+  .card {
+    padding: 20px;
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
