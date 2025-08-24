@@ -8,18 +8,28 @@
   "version": "1.1.0",
   "category": "other",
   "beemi": {
-    "sdkVersion": "2.1.2",
+    "sdkVersion": "2.0.0",
     "core": {
       "required": true
+    },
+    "multiplayer-p2p": {
+      "required": true,
+      "config": {
+        "maxPlayers": 6,
+        "visibility": "public",
+        "persistState": true
+      }
     },
     "streams": {
       "required": true
     },
     "user": {
-      "required": true
-    },
-    "app-bridge": {
-      "required": true
+      "required": true,
+      "config": {
+        "enableProfileSync": true,
+        "cacheUserData": true,
+        "autoUpdateAvatar": false
+      }
     }
   },
   "development": {

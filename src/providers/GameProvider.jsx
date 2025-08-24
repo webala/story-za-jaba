@@ -219,6 +219,7 @@ export default function GameProvider({ children }) {
   const [currentRoundVotes, setCurrentRoundVotes] = useState(new Map()) // username -> vote choice
 
   const [gamePlayerCount, setGamePlayerCount] = useState(0)
+  const [pendingJoin, setPendingJoin] = useState(false)
   const [deadPlayers, setDeadPlayers] = useState(new Set())
   const [selectedVote, setSelectedVote] = useState(null)
   const [myLocalVote, setMyLocalVote] = useState(null)
@@ -239,6 +240,7 @@ export default function GameProvider({ children }) {
   const autoSelectionTriggered = useRef(false)
   const wordTimerActive = useRef(false)
   const gamePlayers = useRef({})
+  const joinTimeoutRef = useRef(null)
 
   // Handle players update from CRDT
   const handlePlayersUpdate = useCallback((playersData) => {
@@ -269,6 +271,17 @@ export default function GameProvider({ children }) {
     console.log('📊 [handlePlayersUpdate] Created Map with entries:', Array.from(newPlayerNames.entries()))
     console.log('📊 [handlePlayersUpdate] Map size:', newPlayerNames.size)
     
+    // Check if this player was pending join and is now in the list
+    if (pendingJoin && playerId && newPlayerNames.has(playerId)) {
+      console.log('✅ [handlePlayersUpdate] Pending join completed for player:', playerId)
+      setPendingJoin(false)
+      // Clear the timeout since join completed
+      if (joinTimeoutRef.current) {
+        clearTimeout(joinTimeoutRef.current)
+        joinTimeoutRef.current = null
+      }
+    }
+    
     setPlayerNames(newPlayerNames)
     setGamePlayerCount(newPlayerNames.size)
 
@@ -278,7 +291,7 @@ export default function GameProvider({ children }) {
 
     // Setup vote watchers for all players
     setupVoteWatchers(newPlayerNames)
-  }, [isLeader, playerNames.size])
+  }, [isLeader, playerNames.size, pendingJoin, playerId])
 
   // Setup vote watchers
   const setupVoteWatchers = useCallback((players) => {
@@ -490,34 +503,63 @@ export default function GameProvider({ children }) {
       clearTimeout(wordDisplayTimerRef.current)
       wordDisplayTimerRef.current = null
     }
+    if (joinTimeoutRef.current) {
+      clearTimeout(joinTimeoutRef.current)
+      joinTimeoutRef.current = null
+    }
     
     console.log('🔄 All local state cleared - players must rejoin')
   }, [])
 
   // Join game
   const joinGame = useCallback((name) => {
-    if (!isConnected || !playerId) return false
+    if (!isConnected || !playerId) {
+      console.log('❌ [joinGame] Cannot join: not connected or no playerId')
+      console.log('❌ [joinGame] isConnected:', isConnected, 'playerId:', playerId)
+      return false
+    }
 
-    console.log(`🎮 Requesting to join game as: ${name}`)
+    console.log(`🎮 [joinGame] Requesting to join game as: ${name}`)
+    console.log(`🎮 [joinGame] Current playerId: ${playerId}`)
+    console.log(`🎮 [joinGame] Is leader: ${isLeader}`)
     
     // If player is the leader, join immediately
     if (isLeader) {
-      console.log('👑 Leader joining game directly')
+      console.log('👑 [joinGame] Leader joining game directly')
       
       // Leader maintains the authoritative state locally
       gamePlayers.current[playerId] = name
       
-      console.log('👑 Leader updating game-players directly:', gamePlayers.current)
-      console.log('👑 Leader game-players keys:', Object.keys(gamePlayers.current))
+      console.log('👑 [joinGame] Leader updating game-players directly:', gamePlayers.current)
+      console.log('👑 [joinGame] Leader game-players keys:', Object.keys(gamePlayers.current))
       setCRDT('game-players', gamePlayers.current)
       
       // Clear any pending requests
       setCRDT('player-requests', {})
       
+      console.log('👑 [joinGame] Leader join completed')
+      
+      // Force immediate local update for leader
+      console.log('👑 [joinGame] Forcing immediate local update for leader')
+      const newPlayerNames = new Map()
+      newPlayerNames.set(playerId, name)
+      setPlayerNames(newPlayerNames)
+      setGamePlayerCount(1)
+      
       return true
     }
     
     // Non-leaders send join request
+    console.log('📨 [joinGame] Non-leader sending join request')
+    setPendingJoin(true)
+    
+    // Set a timeout to clear pending state if join doesn't complete
+    joinTimeoutRef.current = setTimeout(() => {
+      console.log('⏰ [joinGame] Join timeout - clearing pending state')
+      setPendingJoin(false)
+      joinTimeoutRef.current = null
+    }, 10000) // 10 second timeout
+    
     const requests = getCRDT('player-requests') || {}
     requests[playerId] = {
       playerId,
@@ -1012,8 +1054,20 @@ export default function GameProvider({ children }) {
   useEffect(() => {
     if (!isConnected) return
 
+    console.log('🔧 [CRDT Setup] Setting up CRDT watchers...')
+    console.log('🔧 [CRDT Setup] Current playerId:', playerId)
+    console.log('🔧 [CRDT Setup] Current isLeader:', isLeader)
+    
+    // Check initial CRDT state
+    const initialPlayers = getCRDT('game-players')
+    console.log('🔧 [CRDT Setup] Initial game-players state:', initialPlayers)
+    
+    const initialRequests = getCRDT('player-requests')
+    console.log('🔧 [CRDT Setup] Initial player-requests state:', initialRequests)
+
     const unwatchers = []
     
+    console.log('📡 [CRDT Setup] Setting up game-players watcher')
     unwatchers.push(watchCRDT('game-players', handlePlayersUpdate))
     unwatchers.push(watchCRDT('game-phase', handleGamePhaseUpdate))
     unwatchers.push(watchCRDT('player-roles', handleRoleAssignments))
@@ -1033,10 +1087,13 @@ export default function GameProvider({ children }) {
     
     // Leader handles player requests
     if (isLeader) {
+      console.log('👑 [CRDT Setup] Setting up player-requests watcher for leader')
       unwatchers.push(watchCRDT('player-requests', (requests) => {
-        console.log('📨 Player requests updated:', requests)
+        console.log('📨 [CRDT] Player requests updated:', requests)
         handlePlayerRequests(requests)
       }))
+    } else {
+      console.log('👤 [CRDT Setup] Non-leader - not setting up player-requests watcher')
     }
     
     return () => {
@@ -1055,20 +1112,25 @@ export default function GameProvider({ children }) {
     
     console.log('🎯 [handlePlayerRequests] Processing requests:', requests)
     console.log('🎯 [handlePlayerRequests] Current gamePlayers.current:', gamePlayers.current)
+    console.log('🎯 [handlePlayerRequests] Requests keys:', Object.keys(requests))
     
     let updated = false
     
     Object.entries(requests).forEach(([id, request]) => {
+      console.log(`🎯 [handlePlayerRequests] Processing request from ${id}:`, request)
+      
       if (request.action === 'join' && !gamePlayers.current[id]) {
         // Add to leader's authoritative local state
         gamePlayers.current[id] = request.name
         updated = true
-        console.log(`✅ Player ${request.name} joined`)
+        console.log(`✅ [handlePlayerRequests] Player ${request.name} (${id}) joined`)
       } else if (request.action === 'leave' && gamePlayers.current[id]) {
         const leavingPlayerName = gamePlayers.current[id]
         delete gamePlayers.current[id]
         updated = true
-        console.log(`👋 Player ${leavingPlayerName} left`)
+        console.log(`👋 [handlePlayerRequests] Player ${leavingPlayerName} left`)
+      } else if (request.action === 'join' && gamePlayers.current[id]) {
+        console.log(`⚠️ [handlePlayerRequests] Player ${id} already exists:`, gamePlayers.current[id])
       }
     })
     
@@ -1080,6 +1142,8 @@ export default function GameProvider({ children }) {
       // Send the COMPLETE players list from leader's authoritative state
       setCRDT('game-players', gamePlayers.current)
       setCRDT('player-requests', {})
+    } else {
+      console.log('🎯 [handlePlayerRequests] No updates needed')
     }
   }, [isLeader, setCRDT])
 
@@ -1133,6 +1197,7 @@ export default function GameProvider({ children }) {
     return () => {
       if (votingTimerRef.current) clearInterval(votingTimerRef.current)
       if (wordDisplayTimerRef.current) clearTimeout(wordDisplayTimerRef.current)
+      if (joinTimeoutRef.current) clearTimeout(joinTimeoutRef.current)
     }
   }, [])
 
@@ -1160,6 +1225,7 @@ export default function GameProvider({ children }) {
     currentStorytellerIndex,
     viewerLeaderboard,
     currentRoundVotes,
+    pendingJoin,
     
     // Actions
     joinGame,

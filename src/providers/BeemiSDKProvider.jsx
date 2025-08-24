@@ -87,7 +87,8 @@ export default function BeemiSDKProvider({ children }) {
 
   const initializeUserProfile = useCallback(() => {
     if (window.beemi && window.beemi.user) {
-      const user = window.beemi.user.getUser()
+      const user = window.beemi.user
+      console.log('user', user)
       if (user) {
         console.log('👤 User profile available:', {
           id: user.id,
@@ -164,6 +165,11 @@ export default function BeemiSDKProvider({ children }) {
 
   useEffect(() => {
     const checkForBeemi = () => {
+
+      // console.log('beemi', window.beemi)
+      // console.log('beemi.multiplayer', window.beemi.multiplayer)
+      // console.log('beemi.multiplayer.crdt', window.beemi.multiplayer.crdt)
+      
       if (window.beemi && window.beemi.multiplayer && window.beemi.multiplayer.crdt) {
         console.log('✅ Beemi SDK 2.1.1 detected')
         setBeemi(window.beemi)
